@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel xmlns:mx="http://www.adobe.com/2006/mxml"
+		  width="400" height="300" cornerRadius="5" horizontalAlign="center" layout="vertical"
+		  title="登陆框">
+	<mx:Script>
+		<![CDATA[
+			public function set isConnecting(value:Boolean):void
+			{
+				if (value)
+					this.currentState = "connecting";
+				else
+					this.currentState = "";
+			}
+		]]>
+	</mx:Script>
+	<mx:states>
+		<mx:State name="connecting">
+			<mx:AddChild relativeTo="{controlbar1}" position="lastChild">
+				<mx:ProgressBar labelPlacement="left" label="Connecting" indeterminate="true" enabled="true"/>
+			</mx:AddChild>
+			<mx:SetProperty target="{loginForm}" name="enabled" value="false"/>
+		</mx:State>
+	</mx:states>
+	<mx:VBox width="100%" height="100%" id="loginForm" horizontalAlign="center" verticalAlign="middle" paddingBottom="10" paddingLeft="10" paddingRight="10" paddingTop="10" verticalGap="10">
+		<mx:Spacer width="10" height="10"/>
+		<mx:Label text="请输入账号" fontWeight="bold"/>
+		<mx:TextInput id="ti_username" textAlign="center"/>
+		<mx:Button label="登陆" width="100" click="parentApplication.onLoginBtClick()"/>
+		<mx:Spacer width="10" height="10"/>
+		<mx:Text id="ta_error" selectable="false" width="100%" minHeight="0" color="#DB0E0E" includeInLayout="{ta_error.text != ''}" textAlign="center" />
+	</mx:VBox>
+	<mx:ControlBar horizontalAlign="center" id="controlbar1">
+	</mx:ControlBar>
+</mx:Panel>

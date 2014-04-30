@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<s:SparkButtonSkin xmlns:fx="http://ns.adobe.com/mxml/2009" 
+                   xmlns:s="library://ns.adobe.com/flex/spark" 
+                   xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
+                   minWidth="21" minHeight="21" 
+                   alpha.disabledStates="0.5">
+	<fx:Metadata>[HostComponent("spark.components.ButtonBarButton")]</fx:Metadata>
+    
+	
+	<fx:Script>
+		<![CDATA[
+			[Bindable]
+			private var homeTab:Boolean;
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void
+			{
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+				
+				var itemLabel:String = (this as Object).hostComponent.data.label;
+				homeTab = itemLabel == "Home";
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+    <!-- host component -->
+    <!-- states -->
+    <s:states>
+        <s:State name="up" />
+        <s:State name="over" stateGroups="overStates" />
+        <s:State name="down" stateGroups="downStates" />
+        <s:State name="disabled" stateGroups="disabledStates" />
+        <s:State name="upAndSelected" stateGroups="selectedStates, selectedUpStates" />
+        <s:State name="overAndSelected" stateGroups="overStates, selectedStates" />
+        <s:State name="downAndSelected" stateGroups="downStates, selectedStates" />
+        <s:State name="disabledAndSelected" stateGroups="selectedUpStates, disabledStates, selectedStates" />
+    </s:states>
+
+	<s:BitmapImage width="100%" height="100%" scaleMode="stretch" source="@Embed('assets/skinParts/tab-normal.png')"
+				   source.over="@Embed('assets/skinParts/tab_down.png')"
+				   source.selectedStates="@Embed('assets/skinParts/tab-over.png')"
+				   source.down="@Embed('assets/skinParts/tab-selected.png')"/>
+	
+	<s:Rect right="0" top="0" bottom="1" width="1">
+		<s:fill>
+			<s:SolidColor color="0xb2aaa7"/>
+		</s:fill>
+	</s:Rect>
+	<s:Rect left="0" top="0" bottom="1" width="1">
+		<s:fill>
+			<s:SolidColor color="0xb2aaa7"/>
+		</s:fill>
+	</s:Rect>
+	
+	<s:HGroup gap="0" left="16" height="100%">
+		<s:Group height="100%">
+		<s:BitmapImage id="houseIcon" verticalCenter="0" visible="{homeTab}" includeInLayout="{homeTab}" source="@Embed('assets/skinParts/houseIcon.png')"/>
+	</s:Group>
+		<s:Spacer width="7" visible="{homeTab}" includeInLayout="{homeTab}"/>
+		<s:Group height="100%">
+			
+		<s:Label id="labelDisplay" top="2" bottom="2" horizontalCenter="0"
+				 maxDisplayedLines="1" textAlign="center" verticalAlign="middle" verticalCenter="1"
+				 fontFamily="宋体" fontSize="20" fontWeight="bold">
+		</s:Label>
+		</s:Group>
+		<s:Spacer width="16"/>
+	</s:HGroup>
+    
+</s:SparkButtonSkin>

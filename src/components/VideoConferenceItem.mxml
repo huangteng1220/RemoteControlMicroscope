@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" width="120" height="110" xmlns:components="components.*">
+	<fx:Script>
+		<![CDATA[
+			public var currStream:NetStream;
+			
+			public function attachStream(stream:NetStream):void
+			{
+				if (simpleVideo.inited)
+					simpleVideo.video.attachNetStream(stream);
+				else
+					currStream = stream;
+			}
+			
+			public function attachCamera(camera:Camera):void
+			{
+				simpleVideo.video.attachCamera(camera);
+			}
+			
+			public function setLabelText(txt:String):void
+			{
+				lb_name.text = txt;
+			}
+			
+			public function reset(_labelTxt:String = ""):void
+			{
+				simpleVideo.reset();
+				lb_name.text = _labelTxt;
+			}
+			
+			public function onVideoInited():void
+			{
+				if (currStream != null)
+					simpleVideo.video.attachNetStream(currStream);
+			}
+		]]>
+	</fx:Script>
+	<components:SimpleVideo id="simpleVideo" x="0" y="0"/>
+	<mx:Label bottom="0" left="0" right="0" textAlign="center" id="lb_name" color="#AAAAAA" fontWeight="bold"/>
+</mx:Canvas>
