@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   minWidth="955" minHeight="600"
+					   creationComplete="application1_creationCompleteHandler()"
+					   mouseUp="upHandler(event)">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.filters.BlurFilter;
+			import flash.utils.flash_proxy;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.graphics.codec.JPEGEncoder;
+			import mx.graphics.codec.PNGEncoder;
+			import mx.graphics.shaderClasses.SaturationShader;
+			private var fileRef:FileReference;
+			private var maxSize:uint;
+			[Bindable]
+			private var imgUrl:String = 'header/sctp_1.png';
+			private var rootPath:String = 'http://localhost/flex/test/src/header/';
+			private var changeImg:Boolean = false;
+			private var origFile:String = '';
+			private var beginDrag:Boolean = false,offX:Number,offY:Number;
+			private var imageWidth:Number = 0;
+			private var imageHeight:Number = 0;
+			private var loader:URLLoader = new URLLoader;
+			
+			private var preViewImg:Class;
+			//初始化
+			private function application1_creationCompleteHandler():void
+			{
+				maxSize = 1024 * 1024;
+				
+				viewImg.source = preViewImg;
+			}
+			private function uploadError(type:String, text:String):void
+			{
+				Alert.show(text);
+			}
+			//选择图片
+			private function btnBrower_clickHandler():void
+			{
+				fileRef = new FileReference();
+				fileRef.addEventListener(Event.SELECT, picSelect);
+				fileRef.browse();
+				
+			}
+			private function picSelect(event:Event):void
+			{
+				if(fileRef.size > maxSize)
+				{
+					ExternalInterface.call("uploadError", {type:'maxsize',text:'文件太大'});
+					return;
+				}
+				HSlide.visible = false;
+				var req:URLRequest = new URLRequest();
+				req.url = rootPath + 'do_upload.php';
+				req.method = URLRequestMethod.POST;
+				
+				fileRef.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA, function(evt:DataEvent):void{
+					imgUrl = rootPath + evt.data;
+					origFile = evt.data;
+					btnCutImg.enabled = true;
+					proBar.visible = false;
+					btnCancel.visible = false;
+					HSlide.visible = true;
+					sur.x = sur.y = 0;
+					HSlide.value = 100;
+					changeImg = true;
+				});
+				
+				proBar.mode = 'manual';
+				proBar.indeterminate = false;
+				
+				fileRef.addEventListener(ProgressEvent.PROGRESS, function(evt:ProgressEvent):void{
+					proBar.setProgress(evt.bytesLoaded, evt.bytesTotal);
+					proBar.label = String(proBar.value/proBar.maximum*100) + '%';
+				});
+				
+				fileRef.upload(req);
+				proBar.visible = true;
+				btnCancel.visible = true;
+			}
+			
+			//鼠标移动事件
+			private function moveHandler(event:MouseEvent):void
+			{
+				if(beginDrag)
+				{
+					sur.x = Math.max(0, Math.min(div.width - sur.width, img.contentWidth - sur.width, event.stageX - offX - div.parent.x));
+					sur.y = Math.max(0, Math.min(div.height - sur.height, img.contentHeight - sur.height, event.stageY - offY-div.parent.y));
+				}
+			}
+			//鼠标点击事件
+			private function downHandler(event:MouseEvent):void
+			{
+				beginDrag = true;
+				offX = event.stageX - div.x - sur.x;
+				offY = event.stageY - div.y - sur.y;
+			}
+			//鼠标放开事件
+			private function upHandler(event:MouseEvent):void
+			{
+				beginDrag = false;
+			}
+			//图片上传 缩放图片
+			private function changeSize():void
+			{
+				if(changeImg)
+				{
+					imageWidth = img.content.width;
+					imageHeight = img.content.height//img.height;
+					changeImg = false;
+				}
+				img.maintainAspectRatio = false;
+				img.content.width = Math.max(128, uint(imageWidth * HSlide.value / 100));
+				img.content.height = Math.max(128, uint(imageHeight * HSlide.value / 100));
+				
+				viewImg.content.width = surImg.content.width = img.content.width;
+				viewImg.content.height = surImg.content.height= img.content.height;
+				
+			}
+			//保存图片
+			private function cutImg():void
+			{
+				if(imgUrl == '')
+				{
+					Alert.show('请选择图片');
+					return;
+				}
+				var width:Number = Math.min(128, img.width);
+				var height:Number = Math.min(128, img.height);
+				
+				var bd:BitmapData = new BitmapData(width, height);
+				var positionX:Number = sur.horizontalScrollPosition + div.horizontalScrollPosition;
+				var positionY:Number = sur.verticalScrollPosition + div.verticalScrollPosition;
+				bd.draw(img, new Matrix(1, 0, 0, 1, -positionX, -positionY));
+				
+				saveCutImg(bd);
+			}
+			private function saveCutImg(bd:BitmapData):void
+			{
+				var pngEnconder:PNGEncoder = new PNGEncoder();
+				var pngBytes:ByteArray = pngEnconder.encode(bd);
+				
+				var req:URLRequest = new URLRequest();
+				req.method = URLRequestMethod.POST;
+				req.data = pngBytes;
+				req.contentType = "application/octet-stream";
+				req.url = rootPath + 'do_bmd.php';
+				
+				loader.load(req);
+				loader.addEventListener(Event.COMPLETE, loaderCompleteHandler);
+				loader.addEventListener(IOErrorEvent.IO_ERROR, errorHandler);
+			}
+			private function loaderCompleteHandler(event:Event):void
+			{
+				Alert.show(event.target.data);
+			}
+			private function errorHandler(event:Event):void
+			{
+				Alert.show('程序配置错误，上传失败');
+			}
+			
+			/*
+			*摄像头拍照
+			*/
+			
+			private var camera:Camera;
+			private var oldX:Number,oldY:Number;
+			private var bdVideo:BitmapData;
+			private function initCamera():void
+			{
+				camera = Camera.getCamera();
+				camera.setMode(280, 280, 15);
+				myVideo.attachCamera(camera);
+			}
+			
+			private function mouseDownCamera(event:MouseEvent):void
+			{
+				beginDrag = true;
+				oldX = event.stageX - surCamera.x;
+				oldY = event.stageY - surCamera.y;
+			}
+			private function mouseMoveCamera(event:MouseEvent):void
+			{
+				if(beginDrag)
+				{
+					surCamera.x = Math.max(Math.min(event.stageX - oldX, myVideo.width - surCamera.width + 10), 10);
+					surCamera.y = Math.max(Math.min(event.stageY - oldY,myVideo.height-surCamera.height),0);
+				}
+			}
+			//截取视频图像
+			private function captureCamera():void
+			{
+				bdVideo = new BitmapData(128, 128);
+				bdVideo.draw(myVideo, new Matrix(1, 0, 0, 1, myVideo.x - surCamera.x, myVideo.y - surCamera.y));
+				imgCamera.source = new Bitmap(bdVideo);
+				btnSaveCamera.enabled = true;
+			}
+			//保存图像
+			private function saveCamera():void
+			{
+				saveCutImg(bdVideo);
+			}
+		]]>
+	</fx:Script>
+	
+	<mx:TabNavigator styleName="navBox" width="600" height="400">
+		<mx:Canvas styleName="sctpCan" label="上传图片" width="100%" height="100%">
+			
+			<mx:Canvas styleName="sctp1_can" height="100%" mouseMove="moveHandler(event)">
+				
+				<mx:Canvas id="div" styleName="sctp_div" width="100%" height="100%"
+						   verticalScrollPosition="{Math.max((img.contentHeight-div.height)*sur.y/(div.height-sur.height),0)}"
+						   horizontalScrollPosition="{Math.max((img.contentWidth-div.width)*sur.x/(div.width-sur.width),0)}"
+						   >
+					<mx:Image id="img" width="100%" height="100%" alpha="0.6" source="{imgUrl}"/>
+				</mx:Canvas>
+				
+				<!--鼠标拖动区-->
+				<mx:Canvas id="sur" mouseDown="downHandler(event)"
+						   verticalScrollPosition="{div.verticalScrollPosition+sur.y+1}"
+						   horizontalScrollPosition="{div.horizontalScrollPosition+sur.x+1}"
+						   styleName="sctp2_can" verticalScrollPolicy="off"
+						   horizontalScrollPolicy="off" x="0" y="0" width="128" height="128" buttonMode="true">
+					<mx:Image id="surImg" x="0" y="0" source="{imgUrl}"/>
+				</mx:Canvas>
+				
+			</mx:Canvas>
+			
+			<mx:Canvas styleName="canImg" id="canImg"
+					   verticalScrollPosition="{div.verticalScrollPosition+sur.y}"
+					   horizontalScrollPosition="{div.horizontalScrollPosition+sur.x}"
+					   width="128" height="128" verticalScrollPolicy="off" horizontalScrollPolicy="off">
+				<mx:Image x="0" y="0" id="viewImg" width="{Math.max(128,img.width)}"
+						  height="{Math.max(128,img.height)}" source="{imgUrl}"/>
+				
+			</mx:Canvas>
+			
+			<s:Button label="保存头像" right="50" top="220" buttonMode="true" id="btnCutImg" enabled="false"
+					  click="cutImg()"/>
+			<s:Button label="选择图片" click="btnBrower_clickHandler()" buttonMode="true" y="150" right="50" id="btnBrower" fontFamily="Arial"/>
+			<mx:ProgressBar y="260" right="10" labelPlacement="center" height="10" width="120" id="proBar"/>
+			<s:Button label="取消上传" y="280" buttonMode="true" id="btnCancel"/>
+			<mx:HSlider y="270" right="10" dataTipPlacement="top" tickColor="black" labels="['0%', '100%']"
+						width="135" minimum="0" maximum="100" id="HSlide" snapInterval="1" allowTrackClick="true"
+						tickInterval="10" value="100" liveDragging="true"
+						change="changeSize();"/>
+			
+		</mx:Canvas>
+		
+		<mx:Canvas styleName="sctpCan" label="使用摄像头">
+			
+			<mx:Canvas mouseMove="mouseMoveCamera(event)" styleName="sctp1" alpha="0.81" borderColor="#555C61">
+				<mx:VideoDisplay creationComplete="initCamera()" id="myVideo" styleName="myVideo" x="10" width="280" height="280"/>
+				<mx:Canvas mouseDown="mouseDownCamera(event)" buttonMode="true" id="surCamera" borderStyle="solid" width="128" height="128" x="70" y="80" backgroundColor="#ffffff" alpha="0.5" borderColor="#B7BABC"/>
+			</mx:Canvas>
+			
+			<mx:Canvas width="128" height="128" right="10" horizontalScrollPolicy="off" verticalScrollPolicy="off" borderStyle="solid" y="10">
+				<mx:Image id="imgCamera" source="" height="128" width="128" x="0" y="0"/>
+			</mx:Canvas>
+			
+			<s:Button label="拍摄照片" right="10" y="150" click="captureCamera()"/>
+			<s:Button y="190" label="保存头像" click="saveCamera()" enabled="false" id="btnSaveCamera" right="10"/>
+			
+		</mx:Canvas>
+	</mx:TabNavigator>
+
+</s:WindowedApplication>

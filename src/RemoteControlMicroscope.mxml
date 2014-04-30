@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   xmlns:customtitlewindow="components.customtitlewindow.*" 
+					   xmlns:customtitTabBar="components.customtitTabBar.*"
+					   xmlns:components="components.*"
+					   showStatusBar="false"
+					   initialize="init()" 
+					   creationComplete="bar_initializeHandler()" >
+	<fx:Script source="RemoteControlMicroscope.as"/>
+
+	<!-- Application views container -->
+	<mx:ViewStack id="mainView" width="100%" height="100%" creationPolicy="all" paddingBottom="5"
+				  paddingLeft="5" paddingRight="5" paddingTop="5" styleName="mainView">
+		
+		<!-- Connection & login view -->
+		<mx:Box id="view_connecting" width="100%" height="100%" verticalAlign="middle" horizontalAlign="center">
+			<components:LoginPanel id="loginPanel"/>
+		</mx:Box>		
+		<!-- Main view -->		
+		<mx:HBox id="view_chat" width="100%" height="100%">
+			<mx:HDividedBox width="100%" height="100%">
+				<s:BorderContainer width="100%" height="100%" borderWeight="1" cornerRadius="5"
+								   dropShadowVisible="true">
+					<s:VGroup width="100%" height="100%" gap="0">
+						
+						<!--Menu view-->
+						
+						<s:TabBar width="100%" cornerRadius="4" dataProvider="{menuViewStack}"
+								  fontFamily="宋体" fontSize="20" fontWeight="bold"/>
+						<mx:ViewStack id="menuViewStack" width="100%" selectedIndex="6">
+							
+							<s:NavigatorContent label="显微镜" fontFamily="宋体" fontSize="16">
+								
+								<s:Rect left="0" right="0" top="0" bottom="0" radiusX="4" radiusY="4">
+									<s:fill>
+										<s:SolidColor color="0xe4e4e4"/>
+									</s:fill>
+									<s:stroke>
+										<s:SolidColorStroke color="0xbfb6b1"/>
+									</s:stroke>
+								</s:Rect>
+								<s:VGroup width="275" paddingTop="3">
+									
+									<s:HGroup gap="10" paddingLeft="9" verticalAlign="middle">
+										<s:VGroup gap="4">
+											<s:Button id="openCamera"  click="initCamera()"  label="打开" />
+											<s:Button id="closeCamera"  click="closeMyCamera()"  label="关闭" enabled="false"/>
+										</s:VGroup>	
+										<s:Group height="100%"><s:BitmapImage source="@Embed('assets/icons/rb/spacer.png')" verticalCenter="2"/></s:Group>
+										
+										<s:Label fontFamily="宋体" fontSize="16"
+												 text="调焦"/>
+										<s:VGroup gap="4">
+											<s:CheckBox label="粗调" selected="true"/>
+											<s:CheckBox label="微调" selected="false"/>
+										</s:VGroup>
+										
+										<s:Group height="100%"><s:BitmapImage source="@Embed('assets/icons/rb/spacer.png')" verticalCenter="2"/></s:Group>
+										<s:Button   label="上调" enabled="false" />
+										<s:Button   label="下调" enabled="false"/>
+										<s:Button   label="左调" enabled="false"/>
+										<s:Button   label="右调" enabled="false"/>
+										<s:Button   label="前调" enabled="false"/>
+										<s:Button   label="后调" enabled="false"/>
+										<s:Group height="100%"><s:BitmapImage source="@Embed('assets/icons/rb/spacer.png')" verticalCenter="2"/></s:Group>
+										<s:Button   label="申请控制" enabled="false"/>
+										<s:Button   label="强制关闭" enabled="false"/>
+										<s:Group height="100%"><s:BitmapImage source="@Embed('assets/icons/rb/spacer.png')" verticalCenter="2"/></s:Group>
+										<s:Button id="bt_joinConf" click="onJoinConfBtClick()" label="发布视频"/>
+										<s:Button  id="bt_leaveConf" click="onLeaveConfBtClick()"  enabled="false"  label="退出发布"/>
+									</s:HGroup>
+									
+								</s:VGroup>
+								
+							</s:NavigatorContent>
+							
+							<s:NavigatorContent label="音/视频处理" fontFamily="宋体" fontSize="16">
+								<s:Rect left="0" right="0" top="0" bottom="0" radiusX="4" radiusY="4">
+									<s:fill>
+										<s:SolidColor color="0xe4e4e4"/>
+									</s:fill>
+									<s:stroke>
+										<s:SolidColorStroke color="0xbfb6b1"/>
+									</s:stroke>
+								</s:Rect>
+								<s:HGroup gap="10" paddingLeft="9" width="100%" height="100%" verticalAlign="middle">
+									<s:Button  id="shootingBtn"  click="takePicture()" label="拍照" enabled="false"/>
+									<s:Button   label="录像" enabled="false"/>
+									<s:Button   label="截图" enabled="false"/>
+									<s:Button   label="参数设置"/>
+								</s:HGroup>
+							</s:NavigatorContent>
+							
+							<s:NavigatorContent label="图像处理">
+								<s:Rect left="0" right="0" top="0" bottom="0" radiusX="4" radiusY="4">
+									<s:fill>
+										<s:SolidColor color="0xe4e4e4"/>
+									</s:fill>
+									<s:stroke>
+										<s:SolidColorStroke color="0xbfb6b1"/>
+									</s:stroke>
+								</s:Rect>
+							</s:NavigatorContent>
+							
+							<s:NavigatorContent label="帮助">
+								
+							</s:NavigatorContent>
+							
+						</mx:ViewStack>
+						
+						<!--Middle view-->
+						<customtitTabBar:TabBarPlus id="microscopeBar"  cornerRadius="4" height="20"
+													styleName="barStyle"  closePolicy="always"
+													dataProvider="{mainStack}"/>
+						<s:BorderContainer width="100%" height="100%" borderWeight="1" cornerRadius="5"
+										   >
+							
+							<mx:ViewStack id="mainStack" height="100%" width="100%"
+										  backgroundColor="#eeeeee">
+								
+								<!--视频控制-->
+								<s:NavigatorContent id="main" label="显微镜控制区">
+									<s:VideoDisplay id="cameraVideo" top="0" width="1000"
+													height="550" horizontalCenter="0"/> 
+								</s:NavigatorContent>
+								
+								<!--视频列表-->
+								<s:NavigatorContent  label="视频发布列表" width="100%"  >
+									<mx:Tile width="100%" id="videoContainer" horizontalScrollPolicy="off" verticalScrollPolicy="auto" direction="horizontal">
+										<components:VideoConferenceItem id="myVCItem" />
+									</mx:Tile>
+
+								</s:NavigatorContent>
+								
+								<!--图像编辑区-->
+								<s:NavigatorContent  label="图像处理区">
+									<s:Image id="image" top="0" width="1000"
+													height="550" horizontalCenter="0"/> 
+								</s:NavigatorContent>
+								
+							</mx:ViewStack>
+						</s:BorderContainer>
+						<mx:ControlBar horizontalAlign="center" paddingBottom="0" paddingTop="0"
+									   verticalAlign="middle">
+							
+							<s:BorderContainer id="tileBC" backgroundAlpha="0.1"
+											   borderVisible="false" cornerRadius="6">
+								<s:layout>
+									<s:HorizontalLayout horizontalAlign="left" verticalAlign="middle"/>
+								</s:layout>
+							</s:BorderContainer>
+						</mx:ControlBar>
+					</s:VGroup>			
+					
+					
+					<!--Public  Chat view -->
+					<customtitlewindow:MyTitleWindow right="0" bottom="30" width="30%" height="30%" cornerRadius="5"
+													 title="公共聊天中心" tile="{tileBC}" fontFamily="宋体" fontSize="12">
+						<s:VGroup  width="100%" height="100%">
+							
+							<mx:TextArea id="ta_chat" width="100%" height="100%" paddingLeft="10" paddingRight="10" paddingBottom="10" paddingTop="10"
+										 verticalScrollPosition="{ta_chat.maxVerticalScrollPosition}"
+										 />
+							<mx:ControlBar width="100%">
+								<mx:HBox width="100%">
+									<mx:TextInput width="100%" id="ti_chatMsg" enter="onSendBtClick()"/>
+									<mx:Button label="发送" click="onSendBtClick()"/>
+								</mx:HBox>
+							</mx:ControlBar>
+						</s:VGroup>
+					</customtitlewindow:MyTitleWindow>
+					
+				</s:BorderContainer>
+				
+				
+				<mx:VBox width="240" height="100%">
+					<mx:Panel width="100%" height="60%" cornerRadius="5" title="房间列表">
+						<mx:List id="ls_rooms" width="100%" height="100%" labelFunction="getRoomLabel" change="onRoomListChange()"/>
+						<mx:ControlBar direction="vertical">
+							<mx:Label text="带*的房间 已加入密码"/>
+							<mx:Button width="100%" label="创建房间" click="onCreateRoomApplicationBtClick()"/>
+						</mx:ControlBar>
+					</mx:Panel>
+					<mx:Panel width="100%" height="40%" cornerRadius="5" title="用户列表">
+						<mx:List id="ls_users" width="100%" height="100%" selectable="true" labelFunction="getUserLabel" doubleClickEnabled="true" doubleClick="onUserListChange()"/>
+						<mx:ControlBar horizontalGap="0">
+							<mx:Label text="您登陆的姓名为"/>
+							<mx:Label id="lb_myUserName" fontWeight="bold"/>
+						</mx:ControlBar>
+					</mx:Panel>
+				</mx:VBox>
+			</mx:HDividedBox>
+			
+		</mx:HBox>
+		
+		
+	</mx:ViewStack>
+	
+	<!-- Footer -->
+	
+	
+	
+</s:WindowedApplication>

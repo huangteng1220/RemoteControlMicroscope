@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<components:BaseDraggablePanel xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:components="components.*"
+			   showCloseButton="true"
+			   close="removeBuddyChat()"
+			   mouseDown="{this.glowBoolean=false}"
+			   width="400" height="300" cornerRadius="5" >
+	<fx:Declarations>
+		<!-- 将非可视元素（例如服务、值对象）放在此处 -->
+	</fx:Declarations>
+	<fx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			public var lsUsName:String;
+
+		public function removeBuddyChat():void
+			{
+				//panel.sfs=null;
+				PopUpManager.removePopUp(this);
+				
+				delete main.buddyChatPanelsList[lsUsName]
+				// Remove from list
+			}
+		]]>
+	</fx:Script>
+	<s:VGroup width="100%" height="100%">
+		
+		<mx:TextArea id="ta_privateChat" width="100%" height="100%" paddingLeft="5" paddingRight="5" paddingBottom="5" paddingTop="5"/>
+		<mx:ControlBar cornerRadius="5">
+			<mx:HBox width="100%">
+				<mx:TextInput width="100%" id="ti_privateChatMsg"/>
+				<mx:Button id="sendPrMsgbt" label="发送" click="main.onBuddyMsgSendBtClick(event)"/>					   
+			</mx:HBox>
+		</mx:ControlBar>
+	</s:VGroup>
+</components:BaseDraggablePanel>

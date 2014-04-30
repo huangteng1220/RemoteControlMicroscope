@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+
+ADOBE SYSTEMS INCORPORATED
+Copyright 2008 Adobe Systems Incorporated
+All Rights Reserved.
+
+NOTICE: Adobe permits you to use, modify, and distribute this file
+in accordance with the terms of the license agreement accompanying it.
+
+-->
+
+<!--- The default skin class for a Spark TitleWindow container.  
+
+@see spark.skins.spark.TitleWindowCloseButtonSkin
+@see spark.components.TitleWindow
+
+@langversion 3.0
+@playerversion Flash 10
+@playerversion AIR 1.5
+@productversion Flex 4
+-->
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:fb="http://ns.adobe.com/flashbuilder/2009" blendMode="normal" mouseEnabled="false"
+			 minWidth="76" minHeight="76" alpha.disabled="0.5" alpha.disabledWithControlBar="0.5" xmlns:skins="components.customtitlewindow.skins.*" 
+			 >
+	<fx:Metadata>[HostComponent("components.customtitlewindow.CustomTitleWindow")]</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			import spark.skins.spark.windowChrome.MaximizeButtonSkin;
+			import spark.skins.spark.windowChrome.RestoreButtonSkin;
+			[Bindable]
+			public var cornerHandleSize:Number;
+			
+			[Bindable]
+			public var edgeHandleSize:Number;
+		]]>
+	</fx:Script>
+	
+	
+	<s:states>
+		<s:State name="minimized" />
+		<s:State name="normal" />
+		<s:State name="inactive" stateGroups="inactiveGroup" />
+		<s:State name="disabled" />
+		<s:State name="normalWithControlBar" stateGroups="withControls" />
+		<s:State name="inactiveWithControlBar" stateGroups="withControls, inactiveGroup" />
+		<s:State name="disabledWithControlBar" stateGroups="withControls" />
+		<s:State name="maximize"/>
+	</s:states>
+	
+	<s:Group left="0"
+			 right="0"
+			 top="0"
+			 bottom="0">
+		<s:Rect left="0"
+				right="0"
+				radiusX="6"
+				top="0"
+				alpha="0.5"
+				bottom="0">
+			<s:filters>
+				<s:DropShadowFilter alpha="0.8"
+									angle="0"
+									blurX="17.0079"
+									blurY="17.0079"
+									distance="0"
+									quality="100"/>
+			</s:filters>
+			<s:fill>
+				<s:SolidColor color="0xffffff"/>
+			</s:fill>
+			<s:stroke>
+				<s:SolidColorStroke caps="none"
+									color="#ffffff"
+									joints="miter"
+									miterLimit="4"
+									weight="1"/>
+			</s:stroke>
+		</s:Rect>
+		<s:Rect left="1"
+				right="1"
+				radiusX="6"
+				top="1"
+				alpha="0.5"
+				bottom="1">
+			<s:fill>
+				<s:SolidColor color="0xcccccf"/>
+			</s:fill>
+			<s:stroke>
+				<s:SolidColorStroke caps="none"
+									joints="miter"
+									miterLimit="4"
+									weight="1"/>
+			</s:stroke>
+		</s:Rect>
+		<s:Group top="0"
+				 left="0"
+				 right="0"
+				 height="30">
+			<!-- layer 3: text -->
+			<!--- @copy spark.components.Panel#titleDisplay -->
+			<s:Label id="titleDisplay" maxDisplayedLines="1"
+					 left="9" right="36" top="1" bottom="0" minHeight="30"
+					 verticalAlign="middle" fontWeight="bold" />
+			<!-- layer 4: moveArea -->
+			<!--- @copy spark.components.TitleWindow#moveArea -->
+			<s:Group id="moveArea" left="0" right="0" top="0" bottom="0" />
+			
+			<!--- @copy spark.components.TitleWindow#closeButton -->
+			<s:Button id="minButton" skinClass="spark.skins.spark.windowChrome.MinimizeButtonSkin"
+					  width="15" height="15" right="22" top="7" toolTip="最小化"/>
+			
+			<!--- @copy spark.components.TitleWindow#closeButton -->
+			<s:Button id="maxButton" skinClass="spark.skins.spark.windowChrome.MaximizeButtonSkin"
+					  width="15" height="15" right="7" top="7" toolTip="最大化"/>
+			
+			<!--- @copy spark.components.TitleWindow#closeButton -->
+			<s:Button id="closeButton" skinClass="spark.skins.spark.windowChrome.CloseButtonSkin"
+					  width="15" height="15" right="7" top="7"  toolTip="关闭" visible="false"/>
+		</s:Group>
+		<s:Group left="6"
+				 top="30"
+				 right="6"
+				 bottom="6">
+			<s:Rect width="100%"
+					radiusX="6"
+					height="100%">
+				<s:fill>
+					<s:SolidColor color="0xffffff"/>
+				</s:fill>
+			</s:Rect>
+			<s:Group id="contentGroup"
+					 width="100%"
+					 height="100%">
+			</s:Group>
+		</s:Group>
+<!--		<skins:ResizeHandleLines  bottom="1" right="1"/>		
+-->		<s:Group id="resizeHandles"  right="0" bottom="0" height="13"
+				 width="13">
+			<s:Button id="resizeHandleBR" 
+					  right="{-(cornerHandleSize * .5)}"
+					  bottom="{-(cornerHandleSize * .5)}"
+					  width="{cornerHandleSize}"
+					  height="{cornerHandleSize}"
+					  alpha="0"
+					  focusEnabled="false"
+					  visible="false"
+					  />
+		</s:Group>
+	</s:Group>
+	
+</s:SparkSkin>

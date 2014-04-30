@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+				xmlns:s="library://ns.adobe.com/flex/spark"
+				xmlns:mx="library://ns.adobe.com/flex/mx" layout="absolute"  		
+				showCloseButton="true"
+				>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.managers.PopUpManager;
+			
+
+
+			internal function get main():RemoteControlMicroscope
+			{
+				return parentApplication as RemoteControlMicroscope;
+			}
+			
+			private var _glowBoolean:Boolean;
+			public function get glowBoolean():Boolean
+			{
+				return _glowBoolean;
+			}
+			
+			public function set glowBoolean(value:Boolean):void
+			{
+				_glowBoolean = value;
+				if(_glowBoolean)
+					glower.play(); 
+				else
+					glower.end(); 
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:GradientGlowFilter id="glow" 
+							  blurX=".5" blurY=".5"
+							  knockout="false">
+			<s:entries>
+				<s:GradientEntry alpha="0" color="0x000000" ratio="0"/>
+				<s:GradientEntry alpha="0.5" color="0xFFFFFF" ratio="0.2"/>
+				<s:GradientEntry alpha="1" color="0xFFFFFF" ratio="0.2"/>
+			</s:entries>
+		</s:GradientGlowFilter>
+		<s:AnimateFilter id="glower" target="{this}" bitmapFilter="{glow}" 
+						 duration="600" repeatCount="0" >
+			<s:SimpleMotionPath property="strength" valueFrom="0" valueTo="5" /> 
+		</s:AnimateFilter>
+	</fx:Declarations>
+</mx:TitleWindow>
