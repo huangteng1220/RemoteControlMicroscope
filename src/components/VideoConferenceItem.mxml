@@ -1,9 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<mx:Canvas xmlns:fx="http://ns.adobe.com/mxml/2009" 
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
 				   xmlns:s="library://ns.adobe.com/flex/spark" 
-				   xmlns:mx="library://ns.adobe.com/flex/mx" width="120" height="110" xmlns:components="components.*">
+				   xmlns:mx="library://ns.adobe.com/flex/mx" width="120" height="110" 
+				   xmlns:components="components.*" doubleClickEnabled="true" creationComplete="creationCompleteHandler(event)" >
 	<fx:Script>
 		<![CDATA[
+			import com.smartfoxserver.v2.redbox.data.LiveCast;
+			
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			
+	
 			public var currStream:NetStream;
 			
 			public function attachStream(stream:NetStream):void
@@ -35,8 +42,74 @@
 				if (currStream != null)
 					simpleVideo.video.attachNetStream(currStream);
 			}
+			
+			
+			public var mark_max:int=0;
+			protected function doubleClickHandler(event:MouseEvent):void
+			{
+				var clickTarget:VideoConferenceItem=event.currentTarget as VideoConferenceItem;
+				// TODO Auto-generated method stub
+				if(mark_max==0){
+					clickTarget.width=FlexGlobals.topLevelApplication.videoContainer.width;
+					clickTarget.height=FlexGlobals.topLevelApplication.videoContainer.height;
+					mark_max=1;
+					simpleVideo.width=clickTarget.width;
+					simpleVideo.height=clickTarget.height-20;
+					simpleVideo.reset();
+					
+					
+					
+					for each (var liveCast:LiveCast in FlexGlobals.topLevelApplication.avCastMan.getAvailableCasts())
+					{
+
+						var item:VideoConferenceItem=FlexGlobals.topLevelApplication.videoContainer.getChildByName("user_" + liveCast.userId);
+						if(item!=clickTarget)
+						{
+							item.visible=false;
+							item.includeInLayout = false;
+							trace("放大隐藏其他");
+						}else if(item==clickTarget){
+							FlexGlobals.topLevelApplication.appControl_bt.enabled=true;
+							FlexGlobals.topLevelApplication.appCtrlUserNm=liveCast.username;
+							trace("appCtrlUserNm:"+FlexGlobals.topLevelApplication.appCtrlUserNm);
+						}
+
+							
+					}
+					
+				}else{
+					clickTarget.width=120;
+					clickTarget.height=110;
+					mark_max=0;
+					simpleVideo.width=clickTarget.width;
+					simpleVideo.height=90;
+					simpleVideo.reset();
+					trace("mark_max=0;");
+					FlexGlobals.topLevelApplication.appControl_bt.enabled=false;
+					for each (var lc:LiveCast in FlexGlobals.topLevelApplication.avCastMan.getAvailableCasts())
+					{
+
+						var im:VideoConferenceItem=FlexGlobals.topLevelApplication.videoContainer.getChildByName("user_" + lc.userId);
+						if(im!=clickTarget){
+							im.visible=true;
+							im.includeInLayout = true;
+							trace("缩小显示其他");
+						}
+							
+					}
+				}
+				
+			}
+
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				// TODO Auto-generated method stub
+				addEventListener(MouseEvent.DOUBLE_CLICK,doubleClickHandler,false,0,true);
+			}
+			
 		]]>
 	</fx:Script>
 	<components:SimpleVideo id="simpleVideo" x="0" y="0"/>
 	<mx:Label bottom="0" left="0" right="0" textAlign="center" id="lb_name" color="#AAAAAA" fontWeight="bold"/>
-</mx:Canvas>
+</s:BorderContainer>

@@ -1,8 +1,3 @@
-/**
-* 黄腾
-* 梧州学院
-* 2013年12月20日
-*/
 import com.smartfoxserver.v2.SmartFox;
 import com.smartfoxserver.v2.core.SFSEvent;
 import com.smartfoxserver.v2.entities.Room;
@@ -20,7 +15,6 @@ import com.smartfoxserver.v2.requests.PrivateMessageRequest;
 import com.smartfoxserver.v2.requests.PublicMessageRequest;
 import com.smartfoxserver.v2.requests.RoomPermissions;
 import com.smartfoxserver.v2.requests.RoomSettings;
-import com.smartfoxserver.v2.requests.buddylist.BuddyMessageRequest;
 import com.smartfoxserver.v2.util.ClientDisconnectionReason;
 
 import components.CreateRoomWindow;
@@ -28,17 +22,13 @@ import components.EnterPasswordPanel;
 import components.PrivateChat;
 import components.VideoConferenceItem;
 
-import flash.display.Bitmap;
 import flash.display.BitmapData;
 import flash.events.Event;
+import flash.events.MouseEvent;
 import flash.events.StatusEvent;
-import flash.geom.Matrix;
 import flash.media.Camera;
 import flash.media.Video;
 import flash.net.NetStream;
-import flash.utils.getDefinitionByName;
-
-import flexlib.scheduling.scheduleClasses.utils.Selection;
 
 import mx.collections.ArrayCollection;
 import mx.collections.Sort;
@@ -47,15 +37,10 @@ import mx.containers.TitleWindow;
 import mx.controls.Alert;
 import mx.controls.List;
 import mx.controls.TextArea;
-import mx.core.IFlexDisplayObject;
-import mx.core.mx_internal;
+import mx.core.UIComponent;
 import mx.events.CloseEvent;
 import mx.graphics.ImageSnapshot;
 import mx.managers.PopUpManager;
-import mx.states.RemoveChild;
-import mx.utils.UIDUtil;
-
-import spark.components.Button;
 
 private const INITIAL_ROOM_NAME:String = "默认房间";
 
@@ -72,8 +57,7 @@ private var popUp:TitleWindow;
  * Application initialization.
  * An instance of the SmartFoxServer client API is created, and event listeners are added.
  */
-private function init():void
-{
+private function init():void {
 	sfs = new SmartFox(false);
 	
 	// Add event listeners
@@ -94,8 +78,6 @@ private function init():void
 	sfs.addEventListener(SFSEvent.PRIVATE_MESSAGE, onPrivateMessage);
 	
 	
-	
-	
 	sfs.addEventListener(SFSEvent.USER_ENTER_ROOM, onUserEnterRoom);
 	sfs.addEventListener(SFSEvent.USER_EXIT_ROOM, onUserExitRoom);
 	
@@ -107,25 +89,22 @@ private function init():void
 	
 	buddyChatPanelsList = new Array();
 	
-
-
+	
 }
 /*Set first tab as non-closable*/
-protected function bar_initializeHandler():void
-{
-	// 
+protected function bar_initializeHandler():void {
+	//
 	/*Microscope bar does not need closeBtutton*/
 	microscopeBar.setTabClosePolicy(0, false);
 	microscopeBar.setTabClosePolicy(1, false);
-	microscopeBar.setTabClosePolicy(2, false);
+	//microscopeBar.setTabClosePolicy(2, false);
 }
 
 
 /**
  * Login user.
  */
-private function login():void
-{
+private function login():void {
 	var username:String = loginPanel.ti_username.text;
 	var request:LoginRequest = new LoginRequest(username);
 	sfs.send(request);
@@ -134,21 +113,17 @@ private function login():void
 /**
  * Join the passed room.
  */
-private function joinRoom(roomName:String):void
-{
-/*	var request:JoinRoomRequest = new JoinRoomRequest(roomName);
+private function joinRoom(roomName:String):void {
+	/*	var request:JoinRoomRequest = new JoinRoomRequest(roomName);
 	sfs.send(request);*/
 	var room:Room = sfs.getRoomByName(roomName);
 	
-	if (room != null)
-	{
-		if (room.isPasswordProtected)
-		{
+	if (room != null) {
+		if (room.isPasswordProtected) {
 			showPopUp(EnterPasswordPanel);
 			(popUp as EnterPasswordPanel).roomName = roomName;
 		}
-		else
-		{
+		else {
 			var request:JoinRoomRequest = new JoinRoomRequest(roomName);
 			sfs.send(request);
 		}
@@ -157,14 +132,12 @@ private function joinRoom(roomName:String):void
 
 /**
  * Join room button click event listener (enter password panel).
- * Join a room using the password entered in the enter password pupup. 
+ * Join a room using the password entered in the enter password pupup.
  */
-public function onJoinRoomPopuUpBtClick():void
-{
+public function onJoinRoomPopuUpBtClick():void {
 	var enterPwdPopUp:EnterPasswordPanel = (popUp as EnterPasswordPanel);
 	
-	if (enterPwdPopUp.ti_password.text != "")
-	{
+	if (enterPwdPopUp.ti_password.text != "") {
 		// Join room
 		var request:JoinRoomRequest = new JoinRoomRequest(enterPwdPopUp.roomName, enterPwdPopUp.ti_password.text);
 		sfs.send(request);
@@ -176,10 +149,9 @@ public function onJoinRoomPopuUpBtClick():void
 
 /**
  * Cancel (or X) button click event listener (enter password panel).
- * Select previously joined room in rooms list. 
+ * Select previously joined room in rooms list.
  */
-public function onCancelPopuUpBtClick():void
-{
+public function onCancelPopuUpBtClick():void {
 	// Re-select list item corresponding to the last joined room
 	selectLastJoinedRoom();
 	//ls_rooms.selectedIndex = lastJoinedRoomIndex;
@@ -187,8 +159,7 @@ public function onCancelPopuUpBtClick():void
 	// Close popup
 	removePopUp();
 }
-private function selectLastJoinedRoom():void
-{
+private function selectLastJoinedRoom():void {
 	// Re-select list item corresponding to the last joined room
 	var lastJoinedRoom:Room = sfs.lastJoinedRoom;
 	if (lastJoinedRoom != null)
@@ -204,8 +175,7 @@ private function selectLastJoinedRoom():void
  * Login button click event listener.
  * Establish a connection to SmartFoxServer (if necessary) and perform login.
  */
-public function onLoginBtClick():void
-{
+public function onLoginBtClick():void {
 	// Set login panel state
 	loginPanel.isConnecting = true;
 	
@@ -214,8 +184,7 @@ public function onLoginBtClick():void
 	
 	// Check if connection is already available
 	// (this can happen in case of login error, for example)
-	if (!sfs.isConnected)
-	{
+	if (!sfs.isConnected) {
 		// If this is the first time we are attempting the connection,
 		// we have to load the external configuration file containing the connection details (ip, port, zone)
 		// We know if this is the first connection by checking the SmartFox.config property (not null if configuration is already loaded)
@@ -232,8 +201,7 @@ public function onLoginBtClick():void
  * Disconnect button click event listener.
  * Disconnect from SmartFoxServer.
  */
-private function onDisconnectBtClick():void
-{
+private function onDisconnectBtClick():void {
 	sfs.disconnect();
 }
 
@@ -241,15 +209,12 @@ private function onDisconnectBtClick():void
  * Room list selection change event listener.
  * Join the selected room.
  */
-private function onRoomListChange():void
-{
-	if (ls_rooms.selectedIndex > -1)
-	{
+private function onRoomListChange():void {
+	if (ls_rooms.selectedIndex > -1) {
 		// Join selected room
 		joinRoom(ls_rooms.selectedItem.name);
 	}
-	else
-	{
+	else {
 		// Re-select last joined room
 		// This is required in case user deselects currently selected item by holding the CMD (Mac) or CTRL (Windows) key
 		//ls_rooms.selectedIndex = lastJoinedRoomIndex;
@@ -261,10 +226,8 @@ private function onRoomListChange():void
  * Send public message button click event listener.
  * Send a public message to all users in the room.
  */
-private function onSendBtClick():void
-{
-	if (ti_chatMsg.text.length > 0)
-	{
+private function onSendBtClick():void {
+	if (ti_chatMsg.text.length > 0) {
 		var request:PublicMessageRequest = new PublicMessageRequest(ti_chatMsg.text);
 		sfs.send(request);
 		
@@ -273,21 +236,18 @@ private function onSendBtClick():void
 }
 
 
-
 /**
  * Create room button click event listener.
  * Show a popup panel where user can set the room properties.
  */
-private function onCreateRoomApplicationBtClick():void
-{
-/*	createRoomWindow = PopUpManager.createPopUp(this, CreateRoomWindow, true) as CreateRoomWindow;
+private function onCreateRoomApplicationBtClick():void {
+	/*	createRoomWindow = PopUpManager.createPopUp(this, CreateRoomWindow, true) as CreateRoomWindow;
 	PopUpManager.centerPopUp(createRoomWindow);
 	createRoomWindow.addEventListener(CloseEvent.CLOSE, onPopUpClosed, false, 0, true);*/
 	showPopUp(CreateRoomWindow);
-
+	
 }
-private function showPopUp(clazz:Class):void
-{
+private function showPopUp(clazz:Class):void {
 	popUp = PopUpManager.createPopUp(this, clazz, true) as TitleWindow;
 	PopUpManager.centerPopUp(popUp);
 	popUp.addEventListener(CloseEvent.CLOSE, onPopUpClosed, false, 0, true);
@@ -295,16 +255,14 @@ private function showPopUp(clazz:Class):void
 
 /**
  * Create room button click event listener.
- * Create a new room using the parameters entered in the create room pupup. 
+ * Create a new room using the parameters entered in the create room pupup.
  */
-public function onCreateRoomPopuUpBtClick():void
-{
+public function onCreateRoomPopuUpBtClick():void {
 	
 	
 	var createRoomPopUp:CreateRoomWindow = (popUp as CreateRoomWindow);
 	
-	if (createRoomPopUp.ti_name.length > 0)
-	{
+	if (createRoomPopUp.ti_name.length > 0) {
 		// Collect room settings
 		var settings:RoomSettings = new RoomSettings(createRoomPopUp.ti_name.text);
 		settings.password = createRoomPopUp.ti_password.text;
@@ -327,13 +285,11 @@ public function onCreateRoomPopuUpBtClick():void
 	}
 }
 
-private function onAlertClosed(evt:Event):void
-{
+private function onAlertClosed(evt:Event):void {
 	removeAlert();
 }
 
-private function onPopUpClosed(evt:Event):void
-{
+private function onPopUpClosed(evt:Event):void {
 	removePopUp();
 }
 
@@ -344,8 +300,7 @@ private function onPopUpClosed(evt:Event):void
 /**
  * Unable to load client-side configuration.
  */
-private function onConfigLoadFailure(evt:SFSEvent):void
-{
+private function onConfigLoadFailure(evt:SFSEvent):void {
 	// Set login panel state
 	loginPanel.isConnecting = false;
 	
@@ -356,28 +311,29 @@ private function onConfigLoadFailure(evt:SFSEvent):void
 /**
  * On successful connection established, login user.
  */
-private function onConnection(evt:SFSEvent):void
-{
+private function onConnection(evt:SFSEvent):void {
 	if (evt.params.success)
 		login();
-	else
-	{
+	else {
 		// Set login panel state
 		loginPanel.isConnecting = false;
 		
 		// Show message
 		loginPanel.ta_error.text = "Unable to connect to " + sfs.config.host + ":" + sfs.config.port + "\nPlease check the client configuration";
+		
+		if (avCastMan != null) {
+			avCastMan.destroy();
+			avCastMan = null;
+		}
 	}
 }
 
 /**
  * On connection lost, go back to login panel view and display disconnection error message.
  */
-private function onConnectionLost(evt:SFSEvent):void
-{
+private function onConnectionLost(evt:SFSEvent):void {
 	// If the chat view is currently displayed, clear it
-	if (mainView.selectedChild == view_chat)
-	{
+	if (mainView.selectedChild == view_chat) {
 		// Clear chat area
 		ta_chat.htmlText = "";
 		
@@ -398,11 +354,9 @@ private function onConnectionLost(evt:SFSEvent):void
 	// Remove popup, if any
 	removePopUp();
 	
-
 	
 	// Remove listeners added to AVCastManager instance
-	if (avCastMan != null)
-	{
+	if (avCastMan != null) {
 		avCastMan.removeEventListener(RedBoxConnectionEvent.AV_CONNECTION_INITIALIZED, onAVConnectionInited);
 		avCastMan.removeEventListener(RedBoxConnectionEvent.AV_CONNECTION_ERROR, onAVConnectionError);
 		avCastMan.removeEventListener(RedBoxCastEvent.LIVE_CAST_PUBLISHED, onLiveCastPublished);
@@ -411,17 +365,14 @@ private function onConnectionLost(evt:SFSEvent):void
 	}
 	
 	
-	
 	// Set login panel state
 	loginPanel.isConnecting = false;
 	
 	// Show disconnection message, unless user chose voluntarily to close the connection
-	if (evt.params.reason != ClientDisconnectionReason.MANUAL)
-	{
+	if (evt.params.reason != ClientDisconnectionReason.MANUAL) {
 		var msg:String = "Connection lost";
 		
-		switch (evt.params.reason)
-		{
+		switch (evt.params.reason) {
 			case ClientDisconnectionReason.IDLE:
 				msg += "\nYou have exceeded the maximum user idle time";
 				break;
@@ -438,6 +389,8 @@ private function onConnectionLost(evt:SFSEvent):void
 				msg += " due to unknown reason\nPlease check the server-side log";
 				break;
 		}
+		sfs.disconnect();
+		onLeaveConfBtClick();
 		
 		loginPanel.ta_error.text = msg;
 	}
@@ -449,8 +402,7 @@ private function onConnectionLost(evt:SFSEvent):void
 /**
  * An error occurred during login; go back to login panel and display error message.
  */
-private function onLoginError(evt:SFSEvent):void
-{
+private function onLoginError(evt:SFSEvent):void {
 	// Set login panel state
 	loginPanel.isConnecting = false;
 	
@@ -461,9 +413,8 @@ private function onLoginError(evt:SFSEvent):void
 /**
  * On login, show the chat view.
  */
-private function onLogin(evt:SFSEvent):void
-{
-	// Move to chat view, and display user name 
+private function onLogin(evt:SFSEvent):void {
+	// Move to chat view, and display user name
 	mainView.selectedChild = view_chat;
 	lb_myUserName.text = sfs.mySelf.name;
 	
@@ -480,8 +431,7 @@ private function onLogin(evt:SFSEvent):void
 /**
  * On room join error, show an alert.
  */
-private function onRoomJoinError(evt:SFSEvent):void
-{
+private function onRoomJoinError(evt:SFSEvent):void {
 	// Show alert
 	showAlert("Unable to join selected room due to the following error: " + evt.params.errorMessage);
 	
@@ -492,15 +442,14 @@ private function onRoomJoinError(evt:SFSEvent):void
 
 /**
  * On room joined successfully, populate the users list.
- * 
+ *
  * IMPORTANT NOTE
  * When a room is joined, the SmartFoxServer API drop the previous Room object from the rooms list
  * and create a new one containing the additional properties a user can see when inside the room (for example non-global room variables).
  * As the ArrayCollections used as dataproviders of the user interface lists contain a reference to the old object,
  * we have to substitute it with the new object passed in the event parameters.
  */
-private function onRoomJoin(evt:SFSEvent):void
-{
+private function onRoomJoin(evt:SFSEvent):void {
 	var room:Room = evt.params.room;
 	
 	// Show message in the chat area
@@ -512,10 +461,8 @@ private function onRoomJoin(evt:SFSEvent):void
 	// Substitute the Room object in the rooms list dataprovider
 	// Also, select the list item corresponding to joined room and save last joined room index
 	var dataProvider:ArrayCollection = ls_rooms.dataProvider as ArrayCollection;
-	for each (var r:Room in dataProvider)
-	{
-		if (r.id == room.id)
-		{
+	for each (var r:Room in dataProvider) {
+		if (r.id == room.id) {
 			// Update object in dataprovider
 			dataProvider.setItemAt(room, dataProvider.getItemIndex(r));
 			
@@ -535,28 +482,25 @@ private function onRoomJoin(evt:SFSEvent):void
 /**
  * On public message, show it in the chat area.
  */
-private function onPublicMessage(evt:SFSEvent):void
-{
+private function onPublicMessage(evt:SFSEvent):void {
 	showChatMessage(evt.params.message, evt.params.sender);
 }
 
 /**
  * On user count change, update the rooms list.
  */
-private function onUserCountChange(evt:SFSEvent):void
-{
+private function onUserCountChange(evt:SFSEvent):void {
 	ls_rooms.dataProvider.refresh();
 }
 
 /**
  * On user entering the current room, show his/her name in the users list.
  */
-private function onUserEnterRoom(evt:SFSEvent):void
-{
+private function onUserEnterRoom(evt:SFSEvent):void {
 	var user:User = evt.params.user;
-
-	var priavetChat:PrivateChat=buddyChatPanelsList[user.name];
-    if(priavetChat!=null)
+	
+	var priavetChat:PrivateChat = buddyChatPanelsList[user.name];
+	if (priavetChat != null)
 		priavetChat.removeBuddyChat();
 	
 	// Add user to list
@@ -570,23 +514,21 @@ private function onUserEnterRoom(evt:SFSEvent):void
 /**
  * On user leaving the current room, remove his/her name from the users list.
  */
-private function onUserExitRoom(evt:SFSEvent):void
-{
+private function onUserExitRoom(evt:SFSEvent):void {
 	var user:User = evt.params.user;
-	var priavetChat:PrivateChat=buddyChatPanelsList[user.name];
-	if(priavetChat!=null)
+	var priavetChat:PrivateChat = buddyChatPanelsList[user.name];
+	if (priavetChat != null)
 		priavetChat.removeBuddyChat();
-    if(user.isItMe){
-		for each (var pC:PrivateChat in buddyChatPanelsList){
+	if (user.isItMe) {
+		for each (var pC:PrivateChat in buddyChatPanelsList) {
 			pC.removeBuddyChat();
 		}
 		buddyChatPanelsList.splice(0);
-
+		
 	}
 	// We are not interested in the user's own exit event, because that would cause his/her username to be removed from the users list
 	// In fact whenever a room is joined, the previous one is left, so we halway receive this event
-	if (!user.isItMe)
-	{
+	if (!user.isItMe) {
 		// Remove user from list
 		var dataProvider:ArrayCollection = ls_users.dataProvider as ArrayCollection;
 		dataProvider.removeItemAt(dataProvider.getItemIndex(user));
@@ -600,8 +542,7 @@ private function onUserExitRoom(evt:SFSEvent):void
 /**
  * On room added, show it in the rooms list.
  */
-private function onRoomAdd(evt:SFSEvent):void
-{
+private function onRoomAdd(evt:SFSEvent):void {
 	var room:Room = evt.params.room;
 	var dataProvider:ArrayCollection = ls_rooms.dataProvider as ArrayCollection;
 	dataProvider.addItem(room);
@@ -610,15 +551,12 @@ private function onRoomAdd(evt:SFSEvent):void
 /**
  * On room removed, remove it from the rooms list.
  */
-private function onRoomRemove(evt:SFSEvent):void
-{
+private function onRoomRemove(evt:SFSEvent):void {
 	var room:Room = evt.params.room;
 	var dataProvider:ArrayCollection = ls_rooms.dataProvider as ArrayCollection;
 	
-	for each (var r:Room in dataProvider)
-	{
-		if (r.id == room.id)
-		{
+	for each (var r:Room in dataProvider) {
+		if (r.id == room.id) {
 			dataProvider.removeItemAt(dataProvider.getItemIndex(r));
 			break;
 		}
@@ -628,8 +566,7 @@ private function onRoomRemove(evt:SFSEvent):void
 /**
  * On room creation error, show an alert.
  */
-private function onRoomCreationError(evt:SFSEvent):void
-{
+private function onRoomCreationError(evt:SFSEvent):void {
 	// Show alert
 	showAlert("Unable to create room due to the following error: " + evt.params.errorMessage);
 }
@@ -641,13 +578,12 @@ private function onRoomCreationError(evt:SFSEvent):void
 /**
  * Populate the rooms list.
  */
-private function populateRoomsList():void
-{
+private function populateRoomsList():void {
 	// Retrive the rooms list
 	var roomList:Array = sfs.roomManager.getRoomList();
 	
 	// Create the rooms list interface component data provider
-	// (note: the list makes use of the getRoomLabel function) 
+	// (note: the list makes use of the getRoomLabel function)
 	var dataProvider:ArrayCollection = new ArrayCollection(roomList);
 	
 	// Apply sorting
@@ -663,13 +599,12 @@ private function populateRoomsList():void
 /**
  * Populate the users list.
  */
-private function populateUsersList(room:Room):void
-{
+private function populateUsersList(room:Room):void {
 	// Retrive the users list
 	var userList:Array = room.userList;
 	
 	// Create the users list interface component data provider
-	// (note: the list makes use of the getUserLabel function) 
+	// (note: the list makes use of the getUserLabel function)
 	var dataProvider:ArrayCollection = new ArrayCollection(userList);
 	
 	// Apply sorting
@@ -684,41 +619,36 @@ private function populateUsersList(room:Room):void
 /**
  * Start a chat with the buddy.
  */
-private function onUserListChange():void
-{
+private function onUserListChange():void {
 	var isMe:Boolean = (ls_users.selectedIndex > -1 ? (ls_users.selectedItem as User).isItMe : false);
-	if (ls_users.selectedIndex > -1 && !isMe)
-	{
+	if (ls_users.selectedIndex > -1 && !isMe) {
 		// Alert PrivateChat panel
 		getBuddyChatPanel(ls_users);
 	}
-	else
-	{
+	else {
 		Alert.show("用不着给自己发信息!");
-
+		
 	}
-
+	
 }
 
 /**
  * Retrieve the buddy chat panel.
  * If not existing, create it.
  */
-private function getBuddyChatPanel(ls_users:List):PrivateChat
-{
+private function getBuddyChatPanel(ls_users:List):PrivateChat {
 	// Check if private chat with existing user is already in progress
 	
-	var  privateChatTitleWindow:PrivateChat= buddyChatPanelsList[(ls_users.selectedItem as User).name];
-	if (privateChatTitleWindow == null)
-	{
+	var privateChatTitleWindow:PrivateChat = buddyChatPanelsList[(ls_users.selectedItem as User).name];
+	if (privateChatTitleWindow == null) {
 		privateChatTitleWindow = new PrivateChat();
 		//privateChatTitleWindow.ls_users=ls_users;
 		//privateChatTitleWindow.sfs=sfs;
-		privateChatTitleWindow.lsUsName=(ls_users.selectedItem as User).name;
-		privateChatTitleWindow.title="与"+(ls_users.selectedItem as User).name+"私聊";
+		privateChatTitleWindow.lsUsName = (ls_users.selectedItem as User).name;
+		privateChatTitleWindow.title = "与" + (ls_users.selectedItem as User).name + "私聊";
 		
 		// Add panel to display list
-		PopUpManager.addPopUp(privateChatTitleWindow,this,false);
+		PopUpManager.addPopUp(privateChatTitleWindow, this, false);
 		// Set panel position
 		randomMovePanel(privateChatTitleWindow);
 		// Keep a reference to the panel for later use
@@ -732,8 +662,7 @@ private function getBuddyChatPanel(ls_users:List):PrivateChat
 /**
  * Slightly alter the position of the panel once centered.
  */
-private function randomMovePanel(panel:PrivateChat):void
-{
+private function randomMovePanel(panel:PrivateChat):void {
 	panel.x = Math.round((this.width - 560) / 2);
 	panel.y = Math.round((this.height - 366) / 2);
 	
@@ -750,20 +679,17 @@ private function randomMovePanel(panel:PrivateChat):void
  * Send private message button click event listener.
  * Send a private message to the selected user.
  */
-public function onBuddyMsgSendBtClick(evt:Event):void
-{
-	var panel:PrivateChat =evt.target.parentDocument as PrivateChat
+public function onBuddyMsgSendBtClick(evt:Event):void {
+	var panel:PrivateChat = evt.target.parentDocument as PrivateChat
 	var user:User = sfs.userManager.getUserByName(panel.lsUsName);
-	if (panel.ti_privateChatMsg.text != "")
-	{
+	if (panel.ti_privateChatMsg.text != "") {
 		// In private messaging, the sender always receive his/her own message back.
 		// In order to be able to know which user the message was addressed to, we need to pass the recipient id in the additional parameters.
 		var params:ISFSObject = new SFSObject();
-		params.putInt("rId",user.id );
+		params.putInt("rId", user.id);
 		
 		var request:PrivateMessageRequest = new PrivateMessageRequest(panel.ti_privateChatMsg.text, user.id, params);
 		sfs.send(request);
-		
 		
 		
 		panel.ti_privateChatMsg.text = "";
@@ -772,56 +698,71 @@ public function onBuddyMsgSendBtClick(evt:Event):void
 
 /**
  * On private message, select the sender in user list and show message in the private chat area.
- * 
+ *
  * NOTE
  * The private chat system can be highly improved with respect to this example. In fact a mesages queue could be saved for each user,
  * and when a new private message is received, a notification should appear in the users list, without switching to the sender immediately.
- * The SmartFoxBits UserList component implements this improved logic, with a number of additioanl features, so its usage is highly recommended. 
+ * The SmartFoxBits UserList component implements this improved logic, with a number of additioanl features, so its usage is highly recommended.
  */
-private function onPrivateMessage(evt:SFSEvent):void
-{
+private function onPrivateMessage(evt:SFSEvent):void {
 	var subParams:ISFSObject = evt.params.data;
 	
-	showPrivateChatMessage(evt.params.message, evt.params.sender, subParams.getInt("rId"));
+	var msM:String = evt.params.message.substring(0, 6);//w will be "Minidx"
+	trace("msM:" + msM);
+	if (msM == "~!@#$%") {
+		trace("属于控制或者控制申请命令");
+		if (evt.params.message.substring(6) == "a") {
+			trace("属于申请命令");
+			for each (var u:User in ls_users.dataProvider) {
+				if (subParams.getInt("rId") == u.id && !evt.params.sender.isItMe) {
+					Alert.show(evt.params.sender.name + "请求控制您的显微镜", "控制请求", 3);
+					
+					break;
+				}
+			}
+			
+		} else {
+			trace("属于控制命令");
+		}
+		
+	} else {
+		
+		showPrivateChatMessage(evt.params.message, evt.params.sender, subParams.getInt("rId"));
+	}
+	
 }
 
-private function showPrivateChatMessage(message:String, sender:User, recipientId:int):void
-{
+private function showPrivateChatMessage(message:String, sender:User, recipientId:int):void {
 	// Look for the sender in the users list
 	// If the current user is the sender, we have to use the recipientId parameter
 	
 	
-	var  privateChatTitleWindow:PrivateChat;
+	var privateChatTitleWindow:PrivateChat;
 	var userId:int = (sender.isItMe ? recipientId : sender.id);
 	
-	if (ls_users.selectedIndex == -1 || ls_users.selectedItem.id != userId)
-	{
-		for each (var u:User in ls_users.dataProvider)
-		{
-			if (u.id == userId)
-			{
+	if (ls_users.selectedIndex == -1 || ls_users.selectedItem.id != userId) {
+		for each (var u:User in ls_users.dataProvider) {
+			if (u.id == userId) {
 				ls_users.selectedItem = u;
 				
-				privateChatTitleWindow=getBuddyChatPanel(ls_users);
-								
+				privateChatTitleWindow = getBuddyChatPanel(ls_users);
+				
 				break;
 			}
 		}
 	}
 	
-	if (ls_users.selectedIndex > -1)
-	{
-		privateChatTitleWindow=getBuddyChatPanel(ls_users);
+	if (ls_users.selectedIndex > -1) {
+		privateChatTitleWindow = getBuddyChatPanel(ls_users);
 		var formattedMsg:String;
 		
 		if (sender.isItMe)
 			formattedMsg = "<b>You say:</b>";
-		else{
+		else {
 			formattedMsg = "<b>" + sender.name + " says:</b>";
-			privateChatTitleWindow.glowBoolean=true;
+			privateChatTitleWindow.glowBoolean = true;
 		}
 		formattedMsg += "<br/>" + message;
-		
 		
 		
 		// Display message
@@ -833,48 +774,39 @@ private function showPrivateChatMessage(message:String, sender:User, recipientId
 }
 
 
-
-
-
 /**
  * Generate label for each room in the list.
  */
-private function getRoomLabel(room:Room):String
-{
+private function getRoomLabel(room:Room):String {
 	return room.name + " (" + room.userCount + "/" + room.maxUsers + " users)" + (room.isPasswordProtected ? " *" : "");
 }
 
 /**
  * Generate label for each user in the list.
  */
-private function getUserLabel(user:User):String
-{
+private function getUserLabel(user:User):String {
 	return user.name + (user.isItMe ? " (you)" : "");
 }
 
-private function showAlert(message:String):void
-{
+private function showAlert(message:String):void {
 	// Remove previous alert, if any
 	removeAlert()
 	
 	// Show alert
 	//alert = Alert.show(message, "Warning", Alert.OK, null, onAlertClosed);
 	alert = Alert.show(message, "错误提示");
-
+	
 }
 
-private function removeAlert():void
-{
+private function removeAlert():void {
 	if (alert != null)
 		PopUpManager.removePopUp(alert);
 	
 	alert = null;
 }
 
-private function removePopUp():void
-{
-	if (popUp != null)
-	{
+private function removePopUp():void {
+	if (popUp != null) {
 		popUp.removeEventListener(CloseEvent.CLOSE, onPopUpClosed);
 		PopUpManager.removePopUp(popUp);
 	}
@@ -882,17 +814,14 @@ private function removePopUp():void
 	popUp = null;
 }
 
-private function showChatMessage(message:String, user:User):void
-{
+private function showChatMessage(message:String, user:User):void {
 	var formattedMsg:String;
 	
-	if (user == null)
-	{
+	if (user == null) {
 		// This is a system message
 		formattedMsg = "<i>" + message + "</i>";
 	}
-	else
-	{
+	else {
 		// This is a public message
 		if (user.isItMe)
 			formattedMsg = "<b>You say:</b>";
@@ -910,22 +839,20 @@ private function showChatMessage(message:String, user:User):void
 /**
  * Set the chat area vertical position.
  */
-private function setChatVPosition(target:TextArea):void
-{
+private function setChatVPosition(target:TextArea):void {
 	target.verticalScrollPosition = target.maxVerticalScrollPosition;
 }
 
 //---------------------------------
 // dispose Video methods
 //---------------------------------
-private var avCastMan:AVCastManager;
+public var avCastMan:AVCastManager;
 
 
 /**
  * Initialize the AVChatManager instance.
  */
-private function initializeAV():void
-{
+private function initializeAV():void {
 	// Create AVChatmanager instance
 	avCastMan = new AVCastManager(sfs, sfs.currentIp, false, true);
 	
@@ -942,16 +869,14 @@ private function initializeAV():void
 /**
  * Handle A/V connection initialized.
  */
-public function onAVConnectionInited(evt:RedBoxConnectionEvent):void
-{
+public function onAVConnectionInited(evt:RedBoxConnectionEvent):void {
 	// Nothing to do. Usually we should wait this event before enabling the a/v chat related interface elements.
 }
 
 /**
  * Handle A/V connection error.
  */
-public function onAVConnectionError(evt:RedBoxConnectionEvent):void
-{
+public function onAVConnectionError(evt:RedBoxConnectionEvent):void {
 	var error:String = "The following error occurred while trying to establish an A/V connection: " + evt.params.errorCode;
 	
 	// Show alert
@@ -961,11 +886,10 @@ public function onAVConnectionError(evt:RedBoxConnectionEvent):void
 /**
  * Handle new live cast published by user
  */
-public function onLiveCastPublished(evt:RedBoxCastEvent):void
-{
+public function onLiveCastPublished(evt:RedBoxCastEvent):void {
 	var liveCast:LiveCast = evt.params.liveCast;
 	
-	trace ("User " + liveCast.username + " published his live cast");
+	trace("User " + liveCast.username + " published his live cast");
 	
 	// Subscribe live cast and add to video container
 	addLiveCast(liveCast);
@@ -974,11 +898,10 @@ public function onLiveCastPublished(evt:RedBoxCastEvent):void
 /**
  * Handle live cast unpublished by user
  */
-public function onLiveCastUnpublished(evt:RedBoxCastEvent):void
-{
+public function onLiveCastUnpublished(evt:RedBoxCastEvent):void {
 	var liveCast:LiveCast = evt.params.liveCast;
 	
-	trace ("User " + liveCast.username + " unpublished his live cast");
+	trace("User " + liveCast.username + " unpublished his live cast");
 	
 	// When a user unpublishes his live cast, the AVCastManager instance automatically unsubscribes
 	// that cast for the current user, so we just have to remove his video from the stage
@@ -989,32 +912,28 @@ public function onLiveCastUnpublished(evt:RedBoxCastEvent):void
 /**
  * Join video conference
  */
-public function onJoinConfBtClick():void
-{
+public function onJoinConfBtClick():void {
 	// Retrieve live casts already available
-	for each (var liveCast:LiveCast in avCastMan.getAvailableCasts())
-	{
+	for each (var liveCast:LiveCast in avCastMan.getAvailableCasts()) {
 		// Subscribe live cast and add to video container
 		addLiveCast(liveCast);
 	}
 	
 	// Publish my live cast
-	try
-	{
+	try {
 		var myStream:NetStream = avCastMan.publishLiveCast(true, true);
 		
-		if (myStream != null)
-		{
-			// Attach camera output 
-			myVCItem.attachCamera(Camera.getCamera());
+		if (myStream != null) {
+			// Attach camera output
+			//myVCItem.attachCamera(Camera.getCamera());
 			
-			mainStack.selectedIndex=1;
+			mainStack.selectedIndex = 1;
 			bt_joinConf.enabled = false;
 			bt_leaveConf.enabled = true;
 		}
+		
 	}
-	catch (e:Error)
-	{
+	catch (e:Error) {
 		var error:String = "The following error occurred while trying to subscribe a live cast: " + e.message;
 		
 		// Show alert
@@ -1025,14 +944,12 @@ public function onJoinConfBtClick():void
 /**
  * Leave video conference
  */
-public function onLeaveConfBtClick():void
-{
+public function onLeaveConfBtClick():void {
 	// Stop receiveing cast publish/unpublish notification
 	avCastMan.stopPublishNotification();
 	
 	// Retrieve live casts
-	for each (var liveCast:LiveCast in avCastMan.getAvailableCasts())
-	{
+	for each (var liveCast:LiveCast in avCastMan.getAvailableCasts()) {
 		// Unsubscribe cast
 		avCastMan.unsubscribeLiveCast(liveCast.id);
 	}
@@ -1045,29 +962,19 @@ public function onLeaveConfBtClick():void
 }
 
 
-
-
-
-
-
-
-
-
 /**
  * Add live cast to video container
  */
-private function addLiveCast(liveCast:LiveCast):void
-{
+private function addLiveCast(liveCast:LiveCast):void {
 	// Subscribe cast
 	var stream:NetStream = avCastMan.subscribeLiveCast(liveCast.id);
 	
-	if (stream != null)
-	{
+	if (stream != null) {
 		// Add item to video container
 		var item:VideoConferenceItem = new VideoConferenceItem();
 		item.name = "user_" + liveCast.userId;
 		
-		trace("item:"+item.name);
+		trace("item:" + item.name);
 		videoContainer.addChild(item);
 		
 		// Attach stream to item
@@ -1079,113 +986,126 @@ private function addLiveCast(liveCast:LiveCast):void
 /**
  * Reset video conference container
  */
-public function resetVideoConference():void
-{
+public function resetVideoConference():void {
 	// Retrieve live casts
-	for each (var liveCast:LiveCast in avCastMan.getAvailableCasts())
-	{
+	for each (var liveCast:LiveCast in avCastMan.getAvailableCasts()) {
 		// Remove item from video container
-/*		var item:VideoConferenceItem = new VideoConferenceItem();
+		/*		var item:VideoConferenceItem = new VideoConferenceItem();
 		item.name = "user_" + liveCast.userId;
 		trace("item:"+item.name);
 		videoContainer.removeElement(item);*/
-		videoContainer.removeChild(videoContainer.getChildByName("user_" + liveCast.userId));
+		trace("liveCast.userId:"+liveCast.userId);
+		trace("获取视频窗口："+videoContainer.getChildByName("user_" + liveCast.userId));
+		if(videoContainer.getChildByName("user_" + liveCast.userId)!=null){
+			videoContainer.removeChild(videoContainer.getChildByName("user_" + liveCast.userId));	
+		}
+	
 	}
 	
 	// Stop camera output
-	myVCItem.reset(sfs.mySelf.name + " (me)");
+	//myVCItem.reset(sfs.mySelf.name + " (me)");
 	
 	bt_joinConf.enabled = true;
 	bt_leaveConf.enabled = false;
 }
 
 
-
-
-
-
 /*Dispose camera*/
 //定义一个摄像头  
-private var camera:Camera; 
+private var camera:Camera;
 //定义一个本地视频  
-private var localVideo:Video;   
+private var localVideo:Video;
 //定义视频截图  
-private var videoBitmapData:BitmapData;   
+private var videoBitmapData:BitmapData;
 
 
 //初始化摄像头  
-private function initCamera():void  
-{  
-	//打开摄像头  
-/*	camera = Camera.getCamera("0");  
-	if(camera == null && Camera.names.length <= 0                                                             )  
-	{  
-		Alert.show("没有找到摄像头，是否重新查找!", "提示", Alert.OK|Alert.NO, this, onInitCamera);  
-		return;  
-	}  
+private function initCamera():void {
+	//打开摄像头
 	
-	camera.addEventListener(StatusEvent.STATUS,onCameraStatusHandler);  
-	//将摄像头的捕获模式设置为最符合指定要求的本机模式.  
-	camera.setMode(1000,550,30);  
-	//设置每秒的最大带宽或当前输出视频输入信号所需的画面质量  
-	camera.setQuality(144,85);  */ 
-	localVideo = new Video();  
-	localVideo.width = 1000;  
-	localVideo.height = 550; 
-	//正在捕获视频数据的 Camera 对象  
-	camera = Camera.getCamera();  
-	localVideo.attachCamera(camera);  
-	cameraVideo.addChild(localVideo);  
-	//USB 视频设备  
-	trace(Camera.names.length+"");  
-	closeCamera.enabled=true;
-	openCamera.enabled=false;
-	shootingBtn.enabled=true;
-}  
+	var properWith:Number = videoGroup.width;
+	var properHeight:Number = videoGroup.height;
+	
+	var uiComp:UIComponent = new UIComponent();
+	
+	uiComp.width = properWith;
+	uiComp.height = properHeight;
+	
+	localVideo = new Video(properWith, properHeight);
+	
+	//正在捕获视频数据的 Camera 对象
+	camera = Camera.getCamera();
+	camera.setMode(properWith, properHeight, 15);
+	camera.setQuality(0, 0);
+	localVideo.attachCamera(camera);
+	
+	uiComp.addChild(localVideo);
+	videoGroup.addElement(uiComp);
+	//USB 视频设备
+	trace(Camera.names.length + "");
+	closeCamera.enabled = true;
+	openCamera.enabled = false;
+	shootingBtn.enabled = true;
+	
+}
 //关闭摄像头  
-private function closeMyCamera():void  
-{  
-	camera = Camera.getCamera(null); 
-	camera = null; 
-	localVideo.attachCamera(null); 
-	cameraVideo.removeChild(localVideo);
-	closeCamera.enabled=false;
-	openCamera.enabled=true;
-	shootingBtn.enabled=false;
-} 
+private function closeMyCamera():void {
+	camera = Camera.getCamera(null);
+	camera = null;
+	localVideo.attachCamera(null);
+	localVideo = null;
+	videoGroup.removeAllElements();
+	//	cameraVideo.removeChild(localVideo);
+	closeCamera.enabled = false;
+	openCamera.enabled = true;
+	shootingBtn.enabled = false;
+}
 //检测摄像头权限事件
-private function onCameraStatusHandler(event:StatusEvent):void
-{
-	if(!camera.muted)
-	{
+private function onCameraStatusHandler(event:StatusEvent):void {
+	if (!camera.muted) {
 		shootingBtn.enabled = true;
 	}
-	else
-	{
-		Alert.show("无法链接到活动摄像头，是否重新检测，请充许使用摄像头！", "提示", Alert.OK|Alert.NO, this, onInitCamera);
+	else {
+		Alert.show("无法链接到活动摄像头，是否重新检测，请充许使用摄像头！", "提示", Alert.OK | Alert.NO, this, onInitCamera);
 	}
 	camera.removeEventListener(StatusEvent.STATUS, onCameraStatusHandler);
 }
 
 //当摄像头不存在，或连接不正常时重新获取
-private function onInitCamera(event:CloseEvent):void
-{
-	if(event.detail == Alert.OK)
-	{
+private function onInitCamera(event:CloseEvent):void {
+	if (event.detail == Alert.OK) {
 		initCamera();
 	}
 }
 //拍照按钮事件，进行视频截图
-private function takePicture():void
+private function takePicture():void {
+	var bd:BitmapData = ImageSnapshot.captureBitmapData(localVideo);
+	mainStack.selectedIndex = 2;
+	menuViewStack.selectedIndex = 2;
+	
+	//simplePhoto.imageLoaded(bd);//图像处理模块
+
+}
+
+protected function windowedapplicationClosingHandler(event:Event):void
 {
-	var bd:BitmapData = ImageSnapshot.captureBitmapData(cameraVideo);
-	mainStack.selectedIndex=2;
-	menuViewStack.selectedIndex=2;
-	image.source = bd;
-}	
-
-
-
+	// TODO Auto-generated method stub
+	if(sfs!=null)
+		sfs.disconnect();	
+	if(avCastMan != null)
+		onLeaveConfBtClick();
+}
+public var appCtrlUserNm:String;
+protected function appControl_bt_clickHandler(event:MouseEvent):void {
+	// TODO Auto-generated method stub
+	
+	var user:User = sfs.userManager.getUserByName(appCtrlUserNm);
+	trace("UserID:" + user.id);
+	var params:ISFSObject = new SFSObject();
+	params.putInt("rId", user.id);
+	
+	sfs.send(new PrivateMessageRequest("~!@#$%a", user.id, params));
+}
 
 
 
