@@ -60,7 +60,12 @@
 
 			
 			private function btHandler(evnt:MouseEvent):void{
-				this.setVisible(true);
+				if(this.visible==false)
+				{
+					this.setVisible(true);
+				}else{
+					this.setVisible(false);
+				}
 			}
 			private var bt:Button;
 			protected function customtitlewindow1_creationCompleteHandler(event:FlexEvent):void
